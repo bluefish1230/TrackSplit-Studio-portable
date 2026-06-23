@@ -405,6 +405,7 @@
         </div>
         <div class="btn-row">
           <button class="btn primary" id="pickTextBtn">選擇 TXT / LRC</button>
+          <button class="btn secondary" id="sampleTextBtn">範例測試</button>
           <button class="btn ghost" id="clearTextBtn" disabled>清除結果</button>
         </div>
         <div class="message" id="textStatus">等待上傳檔案。</div>
@@ -454,6 +455,7 @@
     const textInput = $('textInput');
     const textDropZone = $('textDropZone');
     const pickTextBtn = $('pickTextBtn');
+    const sampleTextBtn = $('sampleTextBtn');
     const clearTextBtn = $('clearTextBtn');
     const textResults = $('textResults');
     const textStatus = $('textStatus');
@@ -716,6 +718,11 @@
     textDropZone.addEventListener('click', () => textInput.click());
     pickTextBtn.addEventListener('click', () => textInput.click());
     textInput.addEventListener('change', () => convertTextFiles(textInput.files));
+    sampleTextBtn.addEventListener('click', () => convertTextFiles([{
+      name: 'sample.txt',
+      size: 18,
+      text: async () => '简体中文\n歌词测试',
+    }]));
 
     clearTextBtn.addEventListener('click', () => {
       textInput.value = '';
