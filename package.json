@@ -1,0 +1,13 @@
+{
+  "name": "tracksplit-studio-portable",
+  "private": true,
+  "version": "1.0.0",
+  "description": "TrackSplit Studio portable app for audio conversion and lyric search",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "opencc-js": "^1.0.5"
+  }
+}

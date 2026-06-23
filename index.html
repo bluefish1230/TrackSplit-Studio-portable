@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TrackSplit Studio｜M4A 與繁體 LRC</title>
+  <style>
+    :root { color-scheme: dark; --bg:#071019; --panel:#101c28; --line:#24394b; --cyan:#53d8ff; --green:#63dda5; --text:#eef8ff; --muted:#91a9b9; --red:#ff9079; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; font-family:"Segoe UI","Microsoft JhengHei",sans-serif; color:var(--text); background:radial-gradient(circle at 15% 0,#15354b 0,transparent 35%),var(--bg); }
+    button,input { font:inherit; }
+    .shell { width:min(1080px,calc(100% - 32px)); margin:0 auto; padding:28px 0 48px; }
+    header { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:24px; }
+    .brand { font-size:22px; font-weight:800; letter-spacing:.3px; }
+    .brand span { color:var(--cyan); }
+    .status { color:var(--muted); font-size:14px; }
+    .hero,.card { border:1px solid var(--line); background:rgba(14,27,39,.92); box-shadow:0 20px 60px rgba(0,0,0,.25); border-radius:18px; }
+    .hero { padding:28px; margin-bottom:18px; }
+    h1 { margin:0 0 8px; font-size:clamp(26px,5vw,42px); }
+    p { color:var(--muted); line-height:1.7; }
+    .drop { margin-top:22px; padding:34px 20px; border:1px dashed #3f6680; border-radius:14px; text-align:center; cursor:pointer; transition:.2s; }
+    .drop.drag { border-color:var(--cyan); background:rgba(83,216,255,.06); }
+    .drop strong { display:block; font-size:18px; margin-bottom:6px; }
+    .btn { border:0; border-radius:10px; padding:11px 16px; cursor:pointer; font-weight:700; }
+    .btn.primary { color:#031018; background:linear-gradient(135deg,var(--cyan),var(--green)); }
+    .btn.secondary { color:var(--text); background:#192b3a; border:1px solid #315069; }
+    .btn:disabled { opacity:.45; cursor:not-allowed; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+    .card { padding:22px; }
+    h2 { margin:0 0 6px; font-size:20px; }
+    .meta { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:18px 0; }
+    .meta div { padding:12px; border-radius:10px; background:#0a1620; min-width:0; }
+    .meta span { display:block; color:var(--muted); font-size:12px; margin-bottom:4px; }
+    .meta strong { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    audio { width:100%; margin:8px 0 16px; }
+    .actions { display:flex; gap:10px; flex-wrap:wrap; }
+    .progress { height:7px; background:#071019; border-radius:99px; overflow:hidden; margin:18px 0 10px; }
+    .progress div { width:0; height:100%; background:linear-gradient(90deg,var(--cyan),var(--green)); transition:.25s; }
+    .message { min-height:22px; color:var(--muted); font-size:14px; }
+    .query { margin:14px 0; padding:11px 12px; background:#08141e; border-radius:9px; color:var(--muted); font-size:14px; }
+    .results { display:grid; gap:9px; max-height:380px; overflow:auto; }
+    .result { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px; border:1px solid var(--line); border-radius:11px; background:#0a1620; }
+    .result strong,.result span { display:block; }
+    .result span { color:var(--muted); font-size:13px; margin-top:3px; }
+    .empty { color:var(--muted); padding:18px 0; }
+    .download { margin-top:12px; display:none; }
+    footer { margin-top:18px; color:var(--muted); font-size:12px; text-align:center; }
+    @media(max-width:760px){ .grid{grid-template-columns:1fr} header{align-items:flex-start;flex-direction:column}.hero{padding:22px}.meta{grid-template-columns:1fr} }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div class="brand">TrackSplit <span>Studio</span></div>
+      <div class="status" id="status">等待選擇音訊</div>
+    </header>
+
+    <section class="hero">
+      <h1>轉換 M4A，同時尋找繁體 LRC</h1>
+      <p>選擇音訊後，程式會依檔名搜尋酷歌詞。繁體歌名會先轉成簡體搜尋，下載的 LRC 再轉回台灣繁體。</p>
+      <div class="drop" id="dropZone">
+        <strong>拖曳音訊到這裡，或按一下選擇檔案</strong>
+        <span style="color:var(--muted)">支援 MP3、WAV、M4A、FLAC、OGG、AAC</span>
+        <input id="fileInput" type="file" accept="audio/*,.mp3,.wav,.m4a,.flac,.ogg,.aac" hidden>
+      </div>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <h2>M4A 轉換</h2>
+        <p>保留原始完整音訊，不做人聲分離或音量調整。</p>
+        <div class="meta">
+          <div><span>檔名</span><strong id="fileName">—</strong></div>
+          <div><span>檔案大小</span><strong id="fileSize">—</strong></div>
+        </div>
+        <audio id="originalPlayer" controls></audio>
+        <div class="actions">
+          <button class="btn primary" id="convertBtn" disabled>轉換成 M4A</button>
+          <a class="btn secondary download" id="m4aDownload" download>下載 M4A</a>
+        </div>
+        <div class="progress"><div id="progressBar"></div></div>
+        <div class="message" id="convertMessage">尚未選擇檔案</div>
+      </article>
+
+      <article class="card">
+        <h2>LRC 歌詞</h2>
+        <p>搜尋結果可能有同名歌曲，請依歌手選擇正確版本。</p>
+        <div class="query" id="queryText">搜尋詞：—</div>
+        <div class="results" id="lyricsResults">
+          <div class="empty">選擇音訊後會自動搜尋。</div>
+        </div>
+      </article>
+    </section>
+    <footer>歌詞搜尋來源：kugeci.com。請依網站條款及著作權規範使用。</footer>
+  </main>
+
+  <script>
+    const API = location.protocol === 'file:' ? 'http://127.0.0.1:4173' : '';
+    const state = { file:null, originalUrl:'', m4aUrl:'', lrcUrl:'' };
+    const $ = (id) => document.getElementById(id);
+    const fileInput = $('fileInput');
+    const dropZone = $('dropZone');
+    const convertBtn = $('convertBtn');
+
+    function revoke(key) {
+      if (state[key]) URL.revokeObjectURL(state[key]);
+      state[key] = '';
+    }
+
+    function sizeText(bytes) {
+      const units = ['B','KB','MB','GB'];
+      let value = bytes, index = 0;
+      while (value >= 1024 && index < units.length - 1) { value /= 1024; index++; }
+      return `${value.toFixed(index && value < 10 ? 1 : 0)} ${units[index]}`;
+    }
+
+    function baseName(name) {
+      return name.replace(/\.[^.]+$/, '');
+    }
+
+    function setStatus(text) { $('status').textContent = text; }
+    function setProgress(value, text) {
+      $('progressBar').style.width = `${value}%`;
+      $('convertMessage').textContent = text;
+    }
+
+    async function readError(response) {
+      try { return (await response.json()).error; }
+      catch { return `伺服器錯誤 ${response.status}`; }
+    }
+
+    async function loadFile(file) {
+      if (!file) return;
+      state.file = file;
+      revoke('originalUrl');
+      revoke('m4aUrl');
+      revoke('lrcUrl');
+      state.originalUrl = URL.createObjectURL(file);
+      $('originalPlayer').src = state.originalUrl;
+      $('fileName').textContent = file.name;
+      $('fileSize').textContent = sizeText(file.size);
+      $('m4aDownload').style.display = 'none';
+      convertBtn.disabled = false;
+      setProgress(0, '已準備轉換');
+      setStatus('音訊已載入');
+      await searchLyrics(file.name);
+    }
+
+    async function searchLyrics(fileName) {
+      $('lyricsResults').innerHTML = '<div class="empty">正在將檔名轉成簡體並搜尋…</div>';
+      $('queryText').textContent = '搜尋詞：處理中…';
+      try {
+        const response = await fetch(`${API}/api/lyrics/search?fileName=${encodeURIComponent(fileName)}`);
+        if (!response.ok) throw new Error(await readError(response));
+        const data = await response.json();
+        $('queryText').textContent = `搜尋詞：${data.simplifiedQuery}（原檔名：${data.originalName}）`;
+        renderResults(data.results);
+      } catch (error) {
+        $('lyricsResults').innerHTML = `<div class="empty">${escapeHtml(error.message)}</div>`;
+      }
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+    }
+
+    function renderResults(results) {
+      if (!results.length) {
+        $('lyricsResults').innerHTML = '<div class="empty">找不到歌詞。可嘗試將檔名改成「歌手 - 歌名」。</div>';
+        return;
+      }
+      $('lyricsResults').innerHTML = results.map((item) => `
+        <div class="result">
+          <div><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.artist || '未知歌手')}</span></div>
+          <button class="btn secondary" data-song-id="${item.id}" data-title="${escapeHtml(item.title)}">下載繁體 LRC</button>
+        </div>
+      `).join('');
+    }
+
+    async function downloadLrc(button) {
+      const songId = button.dataset.songId;
+      const title = button.dataset.title || baseName(state.file.name);
+      button.disabled = true;
+      button.textContent = '轉換中…';
+      try {
+        const response = await fetch(`${API}/api/lyrics/download/${songId}`);
+        if (!response.ok) throw new Error(await readError(response));
+        revoke('lrcUrl');
+        state.lrcUrl = URL.createObjectURL(await response.blob());
+        const link = document.createElement('a');
+        link.href = state.lrcUrl;
+        link.download = `${title}.lrc`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        button.textContent = '已下載';
+      } catch (error) {
+        button.textContent = '下載失敗';
+        alert(error.message);
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    convertBtn.addEventListener('click', async () => {
+      if (!state.file) return;
+      convertBtn.disabled = true;
+      setProgress(15, '正在轉換 M4A…');
+      setStatus('正在轉換');
+      try {
+        const response = await fetch(`${API}/api/convert-m4a`, {
+          method:'POST',
+          headers:{'Content-Type':state.file.type || 'application/octet-stream','X-File-Name':encodeURIComponent(state.file.name)},
+          body:state.file,
+        });
+        if (!response.ok) throw new Error(await readError(response));
+        revoke('m4aUrl');
+        const blob = await response.blob();
+        state.m4aUrl = URL.createObjectURL(blob);
+        const link = $('m4aDownload');
+        link.href = state.m4aUrl;
+        link.download = `${baseName(state.file.name)}.m4a`;
+        link.style.display = 'inline-block';
+        setProgress(100, `轉換完成（${sizeText(blob.size)}）`);
+        setStatus('M4A 已完成');
+      } catch (error) {
+        setProgress(100, error.message);
+        setStatus('轉換失敗');
+      } finally {
+        convertBtn.disabled = false;
+      }
+    });
+
+    $('lyricsResults').addEventListener('click', (event) => {
+      const button = event.target.closest('[data-song-id]');
+      if (button) downloadLrc(button);
+    });
+    dropZone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', () => loadFile(fileInput.files[0]));
+    ['dragenter','dragover'].forEach((name) => dropZone.addEventListener(name, (event) => {
+      event.preventDefault(); dropZone.classList.add('drag');
+    }));
+    ['dragleave','drop'].forEach((name) => dropZone.addEventListener(name, (event) => {
+      event.preventDefault(); dropZone.classList.remove('drag');
+      if (name === 'drop') loadFile(event.dataTransfer.files[0]);
+    }));
+  </script>
+</body>
+</html>
