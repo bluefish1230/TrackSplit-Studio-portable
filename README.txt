@@ -1,34 +1,22 @@
-TrackSplit Studio portable use
-==============================
+TrackSplit Studio
+=================
 
-How to start:
-1. Double-click Start-TrackSplit.bat.
-2. Keep the command window open.
-3. Open http://127.0.0.1:4173/ in a browser.
+Online page:
+- https://bluefish1230.github.io/TrackSplit-Studio-portable/
 
 Features:
-- Convert the original full audio to M4A (AAC 192 kbps, 44,100 Hz, stereo).
-- Search kugeci.com for matching LRC lyrics using the audio filename.
-- Convert Traditional Chinese filenames to Simplified Chinese before searching.
-- Convert downloaded Simplified Chinese LRC files to Taiwan Traditional Chinese.
+- Convert TXT / LRC simplified Chinese text to Traditional Chinese.
+- Convert audio files to M4A directly in the browser.
+- Search kugeci.com lyrics by song name or audio filename.
+- Download Traditional Chinese LRC files from the browser.
 
-Filename suggestion:
-- Singer - Song title.mp3
-- The app searches by song title and uses the singer name to rank matching results.
-
-Required files:
-- index.html
-- server.js
-- Start-TrackSplit.bat
-- package.json
-- node_modules\
-- bin\ffmpeg.exe or ffmpeg on PATH
-- bin\node.exe or node on PATH
-
-GitHub note:
-- The repo is configured to keep large binary tools out of version control.
-- If you want the portable Windows bundle, keep the executables in your local working copy or publish them as a release asset.
+How to use:
+1. Open the GitHub Pages link above.
+2. Choose the tool you need.
+3. Upload files or enter a search keyword.
+4. Download the converted result.
 
 Notes:
+- M4A conversion uses ffmpeg.wasm in your browser and may take a while on the first load.
 - Lyrics search and download require an internet connection.
-- Lyrics are provided by kugeci.com. Follow the website terms and copyright rules.
+- Lyrics are provided by kugeci.com. Please follow the site terms and copyright rules.
